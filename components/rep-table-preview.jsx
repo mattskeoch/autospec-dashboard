@@ -128,11 +128,23 @@ export default function RepTablePreview({ limit = 5, hrefFull = "/reps" }) {
 
 		return Array.from(perRep, ([rep, v]) => ({ rep, sales: v.sales, deposits: v.deposits }))
 			.sort((a, b) => b.sales - a.sales)
-			.slice(0, limit);
+			.slice(0, limit + 3);
 	}, [rows, limit]);
 
+	// TODO: wire real draft counts per rep when draft-order data is available.
 	const columns = React.useMemo(
 		() => [
+			{
+				id: "rank",
+				header: () => <span className='text-xs text-muted-foreground'>Rank</span>,
+				cell: ({ row }) => (
+					<span className='inline-block w-6 text-center tabular-nums text-muted-foreground'>
+						{row.index + 1}
+					</span>
+				),
+				enableSorting: false,
+				enableHiding: false,
+			},
 			{
 				accessorKey: "rep",
 				header: () => <span className='text-xs text-muted-foreground'>Rep</span>,
@@ -149,6 +161,13 @@ export default function RepTablePreview({ limit = 5, hrefFull = "/reps" }) {
 				cell: ({ row }) => (
 					<span className='tabular-nums'>{AUD0.format(row.original.deposits)}</span>
 				),
+			},
+			{
+				id: "drafts",
+				header: () => <span className='text-xs text-muted-foreground'>Drafts</span>,
+				cell: () => <span className='tabular-nums text-muted-foreground'>0</span>, // TODO: real count
+				enableSorting: false,
+				enableHiding: false,
 			},
 		],
 		[]
@@ -169,7 +188,7 @@ export default function RepTablePreview({ limit = 5, hrefFull = "/reps" }) {
 			{/* Condensed table — no Card wrapper */}
 			<div className='overflow-hidden rounded-lg border'>
 				<Table>
-					<TableHeader className='bg-muted/50 sticky top-0 z-10'>
+					<TableHeader className='bg-card/50 sticky top-0 z-10'>
 						{table.getHeaderGroups().map((hg) => (
 							<TableRow key={hg.id}>
 								{hg.headers.map((h) => (
@@ -183,7 +202,7 @@ export default function RepTablePreview({ limit = 5, hrefFull = "/reps" }) {
 					<TableBody className='text-sm'>
 						{table.getRowModel().rows.length ? (
 							table.getRowModel().rows.map((r) => (
-								<TableRow key={r.id} className='hover:bg-muted/30'>
+								<TableRow key={r.id} className='bg-card'>
 									{r.getVisibleCells().map((cell, i, arr) => (
 										<TableCell
 											key={cell.id}
@@ -217,7 +236,7 @@ export default function RepTablePreview({ limit = 5, hrefFull = "/reps" }) {
 					href='/reps'
 					className='text-sm font-medium text-primary hover:underline underline-offset-4'
 				>
-					View full table →
+					View full report →
 				</Link>
 			</div>
 		</div>

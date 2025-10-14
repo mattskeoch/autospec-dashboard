@@ -69,6 +69,8 @@
   --chart-5: var(--color-blue-800);
   --color-thisMonth: var(--chart-1);
   --color-lastMonth: var(--chart-2);
+  --color-last7: var(--chart-1);
+  --color-prev7: var(--chart-2);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.141 0.005 285.823);
   --sidebar-primary: oklch(0.623 0.214 259.815);
@@ -105,6 +107,8 @@
   --chart-5: var(--color-blue-800);
   --color-thisMonth: var(--chart-1);
   --color-lastMonth: var(--chart-2);
+  --color-last7: var(--chart-1);
+  --color-prev7: var(--chart-2);
   --sidebar: oklch(0.21 0.006 285.885);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.546 0.245 262.881);

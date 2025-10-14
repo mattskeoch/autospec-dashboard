@@ -1,11 +1,17 @@
+// app/page.jsx
+"use client";
+
 import { AppSidebar } from "@/components/app-sidebar";
-import { ChartAreaInteractive } from "@/components/chart-area-interactive";
-import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import ChartSalesBySource from "@/components/chart-sales-by-source";
-import ChartAreaMTD from "@/components/chart-area-mtd";
+import ChartAreaRolling7d from "@/components/chart-area-rolling7d";
+import Podium from "@/components/podium";
+import HighlightsTiles from "@/components/highlights-tiles";
+import RepTablePreview from "@/components/rep-table-preview";
+import { DataTable } from "@/components/data-table";
+import RepTableContainer from "@/components/rep-table-container";
 import StatusCheck from "@/components/status-check";
 
 import data from "./data.json";
@@ -27,13 +33,24 @@ export default function Page() {
 							<SectionCards />
 							<div className='grid grid-cols-1 md:grid-cols-5 gap-4 px-4 lg:px-6'>
 								<div className='col-span-1 md:col-span-3'>
-									<ChartAreaMTD />
+									<ChartAreaRolling7d />
 								</div>
-								<div className='col-span-1 md:col-span-1'>
+								<div className='col-span-1 md:col-span-2'>
 									<ChartSalesBySource />
 								</div>
 							</div>
-							<DataTable data={data} />
+							<Podium />
+							<div className='grid grid-cols-1 md:grid-cols-6 gap-4 px-4 lg:px-6'>
+								<div className='col-span-1 md:col-span-3'>
+									<RepTablePreview limit={5} hrefFull='/reps' />
+								</div>
+								<div className='col-span-1 md:col-span-3'>
+									<HighlightsTiles />
+								</div>
+							</div>
+							{/* <div className='px-4 lg:px-6'>
+								<RepTableContainer />
+							</div> */}
 						</div>
 					</div>
 					<div className='p-4 space-y-4'>
