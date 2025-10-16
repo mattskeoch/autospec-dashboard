@@ -41,8 +41,8 @@ const data = {
 	},
 	sales: [
 		{
-			name: "Data Library",
-			url: "#",
+			name: "Home",
+			url: "/sales",
 			icon: IconDatabase,
 		},
 		{
@@ -51,7 +51,7 @@ const data = {
 			icon: IconReport,
 		},
 		{
-			name: "Word Assistant",
+			name: "Partners",
 			url: "#",
 			icon: IconFileWord,
 		},
@@ -150,13 +150,13 @@ const data = {
 	],
 	sales: [
 		{
-			name: "Home",
-			url: "#",
+			name: "Sales Dashboard",
+			url: "/sales",
 			icon: IconDatabase,
 		},
 		{
 			name: "Standings",
-			url: "#",
+			url: "/sales/standings",
 			icon: IconReport,
 		},
 		{
@@ -184,7 +184,7 @@ export function AppSidebar({ ...props }) {
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<SidebarMenuButton asChild className='data-[slot=sidebar-menu-button]:!p-1.5'>
-							<a href='#'>
+							<a href='/'>
 								<IconInnerShadowTop className='!size-5' />
 								<span className='text-base font-semibold'>Autospec 4x4</span>
 							</a>

@@ -89,6 +89,7 @@ function monthPrefixPerth(date) {
 export default function RepTablePreview({ limit = 5, hrefFull = "/reps" }) {
 	const [mounted, setMounted] = React.useState(false);
 	const [rows, setRows] = React.useState([]);
+	const [draftsMap, setDraftsMap] = React.useState(new Map()); // rep(lowercase) -> MTD draft count
 	const [err, setErr] = React.useState("");
 
 	React.useEffect(() => setMounted(true), []);
@@ -97,6 +98,7 @@ export default function RepTablePreview({ limit = 5, hrefFull = "/reps" }) {
 		let alive = true;
 		(async () => {
 			try {
+				// 1) Sales/deposits source (existing)
 				const raw = await fetchJSON("sales-log");
 				if (!alive) return;
 				const arr = Array.isArray(raw) ? raw : Array.isArray(raw?.rows) ? raw.rows : [];
@@ -111,27 +113,76 @@ export default function RepTablePreview({ limit = 5, hrefFull = "/reps" }) {
 		};
 	}, []);
 
+	React.useEffect(() => {
+		let alive = true;
+		(async () => {
+			try {
+				// 2) Drafts per-rep MTD
+				// Assumes your Cloud Run added endpoint:
+				// GET /drafts/rep-table  -> { rows: [{rep: "Name", drafts_mtd: <number>, ... }], as_of: ... }
+				const resp = await fetchJSON("drafts/rep-table");
+				if (!alive) return;
+				const r = Array.isArray(resp) ? resp : Array.isArray(resp?.rows) ? resp.rows : [];
+				const m = new Map();
+				for (const row of r) {
+					const rep = (
+						row.rep ||
+						row.salesperson ||
+						row.salesPerson ||
+						row.sales_person ||
+						""
+					).toString();
+					const key = rep.trim().toLowerCase() || "unassigned";
+					const drafts = Number(row.drafts_mtd ?? row.drafts ?? row.count ?? row.total ?? 0) || 0;
+					if (!m.has(key)) m.set(key, 0);
+					m.set(key, (m.get(key) || 0) + drafts);
+				}
+				setDraftsMap(m);
+			} catch (e) {
+				// Non-fatal: keep drafts at 0 if endpoint not available yet
+				console.warn("drafts/rep-table fetch failed:", e?.message || e);
+				setDraftsMap(new Map());
+			}
+		})();
+		return () => {
+			alive = false;
+		};
+	}, []);
+
 	const data = React.useMemo(() => {
 		const prefix = monthPrefixPerth(new Date());
 		const perRep = new Map(); // rep -> { sales, deposits }
+
+		const isUnassigned = (s) => {
+			const t = String(s || "").trim();
+			return !t || t.toLowerCase() === "unassigned" || t === "—";
+		};
 
 		for (const r of rows) {
 			const ymd = /^\d{4}-\d{2}-\d{2}$/.test(String(r.date)) ? String(r.date) : perthYMD(r.date);
 			if (!ymd.startsWith(prefix)) continue;
 
 			const rep = resolveRepName(r);
+			if (isUnassigned(rep)) continue;
 			if (!perRep.has(rep)) perRep.set(rep, { sales: 0, deposits: 0 });
 			const acc = perRep.get(rep);
 			if (r.orderTotal > 0) acc.sales += r.orderTotal;
 			if (r.amountPaid > 0) acc.deposits += r.amountPaid;
 		}
 
-		return Array.from(perRep, ([rep, v]) => ({ rep, sales: v.sales, deposits: v.deposits }))
+		// Merge in drafts counts (by lowercase key)
+		const out = Array.from(perRep, ([rep, v]) => {
+			const key = rep.trim().toLowerCase() || "unassigned";
+			const drafts = draftsMap.get(key) || 0;
+			return { rep, sales: v.sales, deposits: v.deposits, drafts };
+		})
+			.filter((r) => !isUnassigned(r.rep)) // extra safety
 			.sort((a, b) => b.sales - a.sales)
 			.slice(0, limit + 3);
-	}, [rows, limit]);
 
-	// TODO: wire real draft counts per rep when draft-order data is available.
+		return out;
+	}, [rows, draftsMap, limit]);
+
 	const columns = React.useMemo(
 		() => [
 			{
@@ -165,7 +216,7 @@ export default function RepTablePreview({ limit = 5, hrefFull = "/reps" }) {
 			{
 				id: "drafts",
 				header: () => <span className='text-xs text-muted-foreground'>Drafts</span>,
-				cell: () => <span className='tabular-nums text-muted-foreground'>0</span>, // TODO: real count
+				cell: ({ row }) => <span className='tabular-nums'>{Number(row.original.drafts || 0)}</span>,
 				enableSorting: false,
 				enableHiding: false,
 			},
@@ -233,7 +284,7 @@ export default function RepTablePreview({ limit = 5, hrefFull = "/reps" }) {
 			{/* Link under table */}
 			<div className='mt-3 flex w-full justify-end'>
 				<Link
-					href='/reps'
+					href={hrefFull || "/reps"}
 					className='text-sm font-medium text-primary hover:underline underline-offset-4'
 				>
 					View full report →
